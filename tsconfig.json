@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"sourceMap": true,
+		"moduleResolution": "node",
+		"allowJs": true,
+		"strict": true,
+		// "module": "esnext",
+		"esModuleInterop": true,
+	},
+	"include": [
+		"packages"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
