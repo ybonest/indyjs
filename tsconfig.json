@@ -5,11 +5,10 @@
 		"moduleResolution": "node",
 		"allowJs": true,
 		"strict": true,
-		// "module": "esnext",
 		"esModuleInterop": true,
 	},
 	"include": [
-		"packages"
+		"packages", "demo"
 	],
 	"exclude": [
 		"node_modules"
