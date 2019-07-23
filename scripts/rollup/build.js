@@ -1,9 +1,12 @@
 const rollup = require('rollup');
-const ncp = require('ncp');
 const fs = require('fs');
+const chalk = require('chalk');  // 为打印信息增加颜色
 
 const Bundle = require('./bundles');
-const common = require('./common');
+const getPlugins = require('./plugins');
+const utils = require('./utils');
+
+const { deleteFiles: deleteBuildPackage, copyFiles: copyAsync } = utils;
 
 function outputBundleNames(bundleType, entry) {
   let basePath = 'build/dist';
@@ -45,33 +48,23 @@ function transformHOC(replace) {
   };
 }
 
-function copyAsync(source, destination, replace) {
-  const transform = transformHOC(replace);
-
-  return new Promise((resolve, reject) => {
-    ncp(source, destination, { transform }, function(err) {
-      if (err) {
-        reject();
-        return console.error(err);
-      }
-      resolve();
-    });
-  });
-}
-
 function replacePackageMain(chunk) {
   if (typeof chunk === 'string') {
     return chunk.replace('index.ts', 'index.js');
   }
 }
 
+// copy 其余文件到对应dist中
 async function copyRelatedFileToDist(name) {
   await copyAsync(
     `packages/${name}/package.json`,
     `build/dist/${name}/package.json`,
-    replacePackageMain
+    {
+      transform: transformHOC(replacePackageMain)
+    }
   );
   await copyAsync(`packages/${name}/README.md`, `build/dist/${name}/README.md`);
+  await copyAsync(`packages/${name}/npm`, `build/dist/${name}`);
 }
 
 function initNpmPackage() {
@@ -85,16 +78,25 @@ async function buildBundles(options) {
   const inputOptions = {
     input: inputEntry,
     external: external,
-    plugins: common.plugins(options)
+    plugins: getPlugins(options)
   };
 
   for (let type of types) {
+    const log = `${chalk.blueBright(entry)} ${type.toLowerCase()}`;
+
     const outputOptions = {
       file: outputBundleNames(type, entry),
       format: outputFormat(type)
     };
-    const bundle = await rollup.rollup(inputOptions);
-    await bundle.write(outputOptions);
+    try {
+      console.log(chalk.bgYellow('BUILDING'), log);
+      const bundle = await rollup.rollup(inputOptions);
+      await bundle.write(outputOptions);
+      console.log(chalk.bgGreen('COMPLETE'), log);
+    } catch (error) {
+      console.log(chalk.bgRed('FAILED'), log);
+      console.error(error);
+    }
   }
 }
 
@@ -105,4 +107,4 @@ async function buildEverything() {
   await initNpmPackage();
 }
 
-buildEverything();
+deleteBuildPackage('build', buildEverything);

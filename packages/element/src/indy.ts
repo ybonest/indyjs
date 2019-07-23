@@ -1,3 +1,7 @@
+const tesrt = () => {
+  console.log(99999);
+};
+
 export default function() {
-    console.log(99999)
+  tesrt();
 }

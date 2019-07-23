@@ -1,3 +1,3 @@
-const Ind = require('./src/indy');
+import Ind from './src/indy';
 
-module.exports = Ind;
+Ind();
